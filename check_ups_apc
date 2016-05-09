@@ -59,7 +59,7 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		self.snmpclient = None
 
 	def probe(self):  # pylint: disable=too-many-locals
-		_log.debug("Probing APC Systems device %s through SNMP", self.args.host)
+		_log.debug("Probing APC UPS device %s through SNMP", self.args.host)
 		self.snmpclient = ups_apc_snmp.snmpclient.SnmpClient(self.args.host, ups_apc_snmp.snmpclient.snmp_auth_data_v2c(community=self.args.community), timeout=self.args.snmp_timeout, retries=self.args.retries)
 
 		if not self.snmpclient.alive:
@@ -67,12 +67,12 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 			yield nagiosplugin.Metric('reachable', dict(status=self.snmpclient.alive, error_indication=self.snmpclient.error_indication, error_status=self.snmpclient.error_status, error_varbinds=self.snmpclient.error_varbinds))
 			return
 
-		_log.debug("Queried APC Systems device %s through SNMP - device is reachable", self.args.host)
+		_log.debug("Queried APC UPS device %s through SNMP - device is reachable", self.args.host)
 		yield nagiosplugin.Metric('reachable', dict(status=True))
 		_log.debug("Found Sysname %s and sysdescr %s", self.snmpclient.sysname, self.snmpclient.sysdescr)
 
 		if not str(self.snmpclient.sysdescr).startswith("APC"):
-			raise nagiosplugin.CheckError("Device is not a APC Systems device - System description is %s", self.snmpclient.sysdescr)
+			raise nagiosplugin.CheckError("Device is not a APC UPS device - System description is %s", self.snmpclient.sysdescr)
 
 		_log.debug("Starting SNMP polling of host %s", self.args.host)
 
@@ -144,7 +144,7 @@ def main():
 	argp.add_argument('-t', '--timeout', help='Check timeout', type=int, default=30)
 	argp.add_argument('-s', '--snmp-timeout', help='SNMP timeout', dest='snmp_timeout', type=int, default=2)
 	argp.add_argument('-r', '--retries', help='SNMP retries', type=int, default=3)
-	argp.add_argument('-u', '--uptime', help='Update limit in minutes to create warning', type=int, default=120)
+	argp.add_argument('-u', '--uptime', help='Uptime limit in minutes to create warning', type=int, default=120)
 	args = argp.parse_args()
 
 	device_defaults = dict(
