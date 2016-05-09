@@ -4,3 +4,10 @@ Priority: optional
 Maintainer: Lukas Schauer <l.schauer@cygnusnetworks.de>
 Build-Depends: debhelper (>= 9), python-all, python-setuptools
 Standards-Version: 3.9.6
+
+Package: check-ups-apc.py
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
+Description: APC UPS Nagios check
+ Nagios/Icinga Plugin for APC UPS systems using SNMP to query the device.%
+
