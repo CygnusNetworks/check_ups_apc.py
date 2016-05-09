@@ -1,0 +1,6 @@
+Source: check-ups-apc.py
+Section: python
+Priority: optional
+Maintainer: Lukas Schauer <l.schauer@cygnusnetworks.de>
+Build-Depends: debhelper (>= 9), python-all, python-setuptools
+Standards-Version: 3.9.6

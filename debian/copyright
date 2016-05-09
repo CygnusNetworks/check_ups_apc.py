@@ -1,0 +1,9 @@
+Format-Specification: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Name: check_ups_apc.py
+Maintainer: Lukas Schauer <l.schauer@cygnusnetworks.de>
+Source: https://github.com/CygnusNetworks/check_ups_apc.py
+
+Files: *
+Copyright: 2015, Cygnus Networks GmbH <info@cygnusnetworks.de>
+License: GPL-3
+ See /usr/share/common-licenses/GPL-3

@@ -1,0 +1,5 @@
+check-ups-apc.py (0.10+debian1) UNRELEASED; urgency=low
+
+  * Initial version
+
+ -- Lukas Schauer <l.schauer@cygnusnetworks.de>  Mon, 09 May 2016 18:35:00 +0200
