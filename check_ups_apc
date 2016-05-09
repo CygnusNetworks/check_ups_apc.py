@@ -138,7 +138,7 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 def main():
 	argp = argparse.ArgumentParser()
 	argp.add_argument('-v', '--verbose', action='count', default=0)
-	argp.add_argument('-c', '--config', help='config file', default='/etc/check_sub10.conf')
+	argp.add_argument('-c', '--config', help='config file', default='/etc/check_ups_apc.conf')
 	argp.add_argument('-C', '--community', help='SNMP Community', default='public')
 	argp.add_argument('-H', '--host', help='Hostname or network address to check', required=True)
 	argp.add_argument('-t', '--timeout', help='Check timeout', type=int, default=30)
