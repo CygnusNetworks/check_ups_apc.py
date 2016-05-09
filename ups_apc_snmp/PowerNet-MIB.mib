@@ -223,9 +223,10 @@ PowerNet-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
    enterprises, IpAddress, Gauge, TimeTicks             FROM RFC1155-SMI
-   DisplayString                                        FROM RFC1213-MIB
-   OBJECT-TYPE                                          FROM RFC-1212
-   TRAP-TYPE                                            FROM RFC-1215;
+   DisplayString                                        FROM SNMPv2-TC
+   OBJECT-TYPE                                          FROM SNMPv2-SMI
+   Unsigned32, Integer32                                FROM SNMPv2-SMI
+   TRAP-TYPE                                            FROM SNMPv2-SMI;
 -- IMPORTS End
 
 apc                            OBJECT IDENTIFIER ::=  { enterprises 318 }
