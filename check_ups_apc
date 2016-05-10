@@ -9,6 +9,7 @@ import configparser
 import nagiosplugin
 import nagiosplugin.result
 import nagiosplugin.state
+import pysnmp.smi
 
 import ups_apc_snmp
 import ups_apc_snmp.snmpclient
@@ -81,6 +82,12 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		self.snmpclient = None
 
 	def probe(self):  # pylint: disable=too-many-locals
+		mib_builder = pysnmp.smi.builder.MibBuilder()
+		mib_sources = mib_builder.getMibSources() + (pysnmp.smi.builder.DirMibSource(MIB_PATH),)
+		mib_builder.setMibSources(*mib_sources)
+		mib_builder.loadModules("SNMPv2-MIB")
+		mib_builder.loadModules("PowerNet-MIB")
+
 		_log.debug("Probing APC UPS device %s through SNMP", self.args.host)
 		self.snmpclient = ups_apc_snmp.snmpclient.SnmpClient(self.args.host, ups_apc_snmp.snmpclient.snmp_auth_data_v2c(community=self.args.community), timeout=self.args.snmp_timeout, retries=self.args.retries)
 
@@ -137,8 +144,11 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		_log.debug("Device %s input frequency is %dHz", self.args.host, input_frequency)
 
 		# output
-		output_status = self.snmpclient.get("PowerNet-MIB::upsBasicOutputStatus.0").get_value()
-		_log.debug("Device %s output status is %d", self.args.host, output_status)
+		output_status_namedvalues = mib_builder.mibSymbols['PowerNet-MIB']['upsBasicOutputStatus'].syntax.getNamedValues()
+		output_status_value = self.snmpclient.get("PowerNet-MIB::upsBasicOutputStatus.0").get_value()
+		output_status = output_status_namedvalues.getName(output_status_value)
+		_log.debug("Device %s output status is %s", self.args.host, output_status)
+		yield nagiosplugin.Metric('output_status', output_status)
 
 		output_voltage = self.snmpclient.get("PowerNet-MIB::upsAdvOutputVoltage.0").get_value()
 		_log.debug("Device %s output voltage is %dV", self.args.host, output_voltage)
@@ -212,6 +222,30 @@ def main():
 	check.add(nagiosplugin.ScalarContext('output_frequency',
 											warning='%i:%i' % (config_parser.getint(args.host, 'output_frequency_min_warn'), config_parser.getint(args.host, 'output_frequency_max_warn')),
 											critical='%i:%i' % (config_parser.getint(args.host, 'output_frequency_min_crit'), config_parser.getint(args.host, 'output_frequency_max_crit'))))
+
+	output_status_ok_values = [
+		'onLine',
+		'hotStandby',
+	]
+	output_status_warn_values = [
+		'onBattery',
+		'onSmartBoost',  # under-voltage boost
+		'softwareBypass',
+		'switchedBypass',
+		'rebooting',
+		'onSmartTrim',  # over-voltage trim
+		'ecoMode',  # bypass
+		'staticBypassStandby',
+	]
+	output_status_crit_values = [
+		'timedSleeping',  # output off (planned)
+		'sleepingUntilPowerReturn',
+		'hardwareFailureBypass',
+		'emergencyStaticBypass',
+		'off',
+		'powerSavingMode',  # auto-off
+	]
+	check.add(ElementContext('output_status', ok_values=output_status_ok_values, warn_values=output_status_warn_values, crit_values=output_status_crit_values))
 
 	# battery
 	check.add(nagiosplugin.ScalarContext('battery_capacity',
