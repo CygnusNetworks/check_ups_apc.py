@@ -2,14 +2,14 @@
 
 This Nagios/Icinga Check provides the ability to query APC UPS devices (aka PowerNet) for current status.
 
-It will output voltages, frequencies, battery state and more values for tools like pnp4nagios.  
-Implementation is in Python. You will need Python libraries pnp4nagios and pysnmp as dependencies.
+It will output voltages, frequencies, battery state and other values as performance data for tools like pnp4nagios.  
+Implementation is in Python. You will need Python libraries nagiosplugin and pysnmp as dependencies.
 
 You need to enable the SNMP Agent on your APC device and set a SNMP Read community.
 
 ### Installation (manual using pip) on your Nagios Host
 ```
-pip install nagiosplugin pysnmp
+pip install -r requirements.txt
 python setup.py install
 ln -s /usr/bin/check_ups_apc /usr/lib/nagios/plugins/check_ups_apc
 ```
@@ -20,20 +20,23 @@ For Debian you can use the provided Debian package. Debian Jessie should be fine
 
 ### Usage example
 
-Nagios Plugin called manually:i
+Nagios Plugin called manually:
 
 ```
-./check_ups_apc -H 1.2.3.4 -C public
+./check_ups_apc -H 10.0.0.1 -C public
 ```
 
-See check_ups_apc -h for additional command line arguments. Use -vvv to get Debug Output including additional system information.
+See `check_ups_apc -h` for additional command line arguments. Use -vvv to get Debug Output including additional system information.
 
 ### Using a config file
 
-You can use a config file to change ranges of the warning and critical value ranges for the different monitored devices. The config is expected to be named /etc/check_ups_apc.conf.
-Use the command line Switch --config (-c) to override this behaviour.
+You can use a config file to change ranges of the warning and critical value ranges for the different monitored devices. The config is expected to be named `/etc/check_ups_apc.conf`.
+Use the command line switch `--config (-c)` to override this behaviour.
 
-The config file must contain sections named after the specified hostname/hostaddress of the device (parameter -H) of the check_ups_apc call. You can list the changed parameters within this section. Non present value will take over the defaults. Example (all values are the default values):
+The config file must contain sections named after the specified hostname/hostaddress of the device (parameter -H) of the check_ups_apc call.
+You can list the changed parameters within this section. Non present values will be set to default values.
+
+Example (all values are the default values):
 
 /etc/check_ups_apc.conf
 ```
