@@ -180,10 +180,10 @@ def main():
 	args = argp.parse_args()
 
 	device_defaults = dict(
-		input_voltage_min_warn=220, input_voltage_max_warn=250, input_voltage_min_crit=210, input_voltage_max_crit=245,
+		input_voltage_min_warn=215, input_voltage_max_warn=240, input_voltage_min_crit=210, input_voltage_max_crit=245,
 		input_frequency_min_warn=48, input_frequency_max_warn=52, input_frequency_min_crit=47, input_frequency_max_crit=53,
 
-		output_voltage_min_warn=220, output_voltage_max_warn=250, output_voltage_min_crit=210, output_voltage_max_crit=245,
+		output_voltage_min_warn=215, output_voltage_max_warn=240, output_voltage_min_crit=210, output_voltage_max_crit=245,
 		output_frequency_min_warn=48, output_frequency_max_warn=52, output_frequency_min_crit=47, output_frequency_max_crit=53,
 
 		battery_capacity_min_warn=70, battery_capacity_min_crit=50,
