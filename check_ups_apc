@@ -44,6 +44,23 @@ class BoolContextWarning(BoolContext):  # pylint: disable=too-few-public-methods
 			return self.result_cls(nagiosplugin.state.Warn, self.warn_text, metric)
 
 
+class ElementContext(nagiosplugin.Context):  # pylint: disable=too-few-public-methods
+	def __init__(self, name, ok_text=None, warn_text=None, crit_text=None, unknown_text=None, ok_values=[], warn_values=[], crit_values=[], fmt_metric='{name} is {valueunit}', result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
+		self.ok_text = ok_text
+		self.crit_text = crit_text
+		super(BoolContext, self).__init__(name, fmt_metric, result_cls)
+
+	def evaluate(self, metric, resource):
+		if metric.value in ok_values:
+			return self.result_cls(nagiosplugin.state.Ok, self.ok_text, metric)
+		elif metric.value in warn_values:
+			return self.result_cls(nagiosplugin.state.Warn, self.crit_text, metric)
+		elif metric.value in crit_values:
+			return self.result_cls(nagiosplugin.state.Critical, self.crit_text, metric)
+		else:
+			return self.result_cls(nagiosplugin.state.Unknown, self.unknown_text, metric)
+
+
 class SNMPContext(nagiosplugin.Context):  # pylint: disable=too-few-public-methods
 	def evaluate(self, metric, resource):
 		if metric.value["status"]:
