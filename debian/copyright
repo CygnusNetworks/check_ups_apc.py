@@ -4,6 +4,6 @@ Maintainer: Lukas Schauer <l.schauer@cygnusnetworks.de>
 Source: https://github.com/CygnusNetworks/check_ups_apc.py
 
 Files: *
-Copyright: 2015, Cygnus Networks GmbH <info@cygnusnetworks.de>
-License: GPL-3
- See /usr/share/common-licenses/GPL-3
+Copyright: 2016, Cygnus Networks GmbH <info@cygnusnetworks.de>
+License: Apache-2.0
+ See /usr/share/common-licenses/Apache-2.0
