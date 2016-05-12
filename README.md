@@ -68,6 +68,9 @@ battery_temperature_min_warn = 15
 battery_temperature_min_crit = 10
 battery_temperature_max_warn = 30
 battery_temperature_max_crit = 40
+
+output_load_max_warn = 70
+output_load_max_crit = 85
 ```
 
 ### Nagios Integration

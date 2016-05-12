@@ -169,6 +169,7 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 
 		output_load = self.snmpclient.get("PowerNet-MIB::upsAdvOutputLoad.0").get_value()
 		_log.debug("Device %s output load is %d%%", self.args.host, output_load)
+		yield nagiosplugin.Metric('output_load', output_load)
 
 		output_frequency = self.snmpclient.get("PowerNet-MIB::upsAdvOutputFrequency.0").get_value()
 		_log.debug("Device %s output frequency is %dHz", self.args.host, output_frequency)
@@ -199,6 +200,8 @@ def main():
 
 		battery_capacity_min_warn=70, battery_capacity_min_crit=50,
 		battery_temperature_min_warn=15, battery_temperature_max_warn=30, battery_temperature_min_crit=10, battery_temperature_max_crit=40,
+
+		output_load_max_warn=70, output_load_max_crit=85,
 	)
 	config_defaults = {'general': {}, args.host: device_defaults}
 
@@ -229,6 +232,10 @@ def main():
 	check.add(nagiosplugin.ScalarContext('output_voltage',
 											warning='%i:%i' % (config_parser.getint(args.host, 'output_voltage_min_warn'), config_parser.getint(args.host, 'output_voltage_max_warn')),
 											critical='%i:%i' % (config_parser.getint(args.host, 'output_voltage_min_crit'), config_parser.getint(args.host, 'output_voltage_max_crit'))))
+
+	check.add(nagiosplugin.ScalarContext('output_load',
+											warning='0:%i' % (config_parser.getint(args.host, 'output_load_max_warn')),
+											critical='0:%i' % (config_parser.getint(args.host, 'output_load_max_crit'))))
 
 	check.add(nagiosplugin.ScalarContext('output_frequency',
 											warning='%i:%i' % (config_parser.getint(args.host, 'output_frequency_min_warn'), config_parser.getint(args.host, 'output_frequency_max_warn')),
