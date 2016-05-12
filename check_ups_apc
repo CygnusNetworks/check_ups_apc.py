@@ -19,6 +19,17 @@ MIB_PATH = os.path.realpath(os.path.dirname(ups_apc_snmp.__file__))
 _log = logging.getLogger('nagiosplugin')
 
 
+class PerformanceContext(nagiosplugin.Context):  # pylint: disable=too-few-public-methods
+	def __init__(self, name, fmt_metric='{name} is {valueunit}', result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
+		super(PerformanceContext, self).__init__(name, fmt_metric, result_cls)
+
+	def performance(self, metric, resource):
+		return nagiosplugin.performance.Performance(metric.name, metric.value)
+
+	def evaluate(self, metric, resource):
+		return self.result_cls(nagiosplugin.state.Ok, None, metric)
+
+
 class BoolContext(nagiosplugin.Context):  # pylint: disable=too-few-public-methods
 	def __init__(self, name, ok_text=None, crit_text=None, fmt_metric='{name} is {valueunit}', result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
 		self.ok_text = ok_text
