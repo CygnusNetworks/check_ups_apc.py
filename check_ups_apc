@@ -127,12 +127,15 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		# battery
 		battery_capacity = self.snmpclient.get("PowerNet-MIB::upsAdvBatteryCapacity.0").get_value()
 		_log.debug("Device %s battery capacity is %d%%", self.args.host, battery_capacity)
+		yield nagiosplugin.Metric('battery_capacity', battery_capacity)
 
 		battery_voltage = self.snmpclient.get("PowerNet-MIB::upsAdvBatteryActualVoltage.0").get_value()
 		_log.debug("Device %s battery voltage is %dV", self.args.host, battery_voltage)
+		yield nagiosplugin.Metric('battery_voltage', battery_voltage)
 
 		battery_temperature = self.snmpclient.get("PowerNet-MIB::upsAdvBatteryTemperature.0").get_value()
 		_log.debug("Device %s battery temperature is %dC", self.args.host, battery_temperature)
+		yield nagiosplugin.Metric('battery_temperature', battery_temperature)
 
 		battery_replace_indicator = self.snmpclient.get("PowerNet-MIB::upsAdvBatteryReplaceIndicator.0").get_value() == 2
 		_log.debug("Device %s battery replace indicator is %s", self.args.host, 'on' if battery_replace_indicator else 'off')
@@ -140,19 +143,24 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 
 		battery_run_time_remaining = self.snmpclient.get("PowerNet-MIB::upsAdvBatteryRunTimeRemaining.0").get_value() / 100
 		_log.debug("Device %s battery run time remaining: %ds", self.args.host, battery_run_time_remaining)
+		yield nagiosplugin.Metric('battery_run_time_remaining', battery_run_time_remaining)
 
 		# input
 		input_voltage = self.snmpclient.get("PowerNet-MIB::upsAdvInputLineVoltage.0").get_value()
 		_log.debug("Device %s input voltage is %dV", self.args.host, input_voltage)
+		yield nagiosplugin.Metric('input_voltage', input_voltage)
 
 		input_min_voltage = self.snmpclient.get("PowerNet-MIB::upsAdvInputMinLineVoltage.0").get_value()
 		_log.debug("Device %s minimum input voltage is %dV", self.args.host, input_min_voltage)
+		yield nagiosplugin.Metric('input_min_voltage', input_min_voltage)
 
 		input_max_voltage = self.snmpclient.get("PowerNet-MIB::upsAdvInputMaxLineVoltage.0").get_value()
 		_log.debug("Device %s maximum input voltage is %dV", self.args.host, input_max_voltage)
+		yield nagiosplugin.Metric('input_max_voltage', input_max_voltage)
 
 		input_frequency = self.snmpclient.get("PowerNet-MIB::upsAdvInputFrequency.0").get_value()
 		_log.debug("Device %s input frequency is %dHz", self.args.host, input_frequency)
+		yield nagiosplugin.Metric('input_frequency', input_frequency)
 
 		# output
 		output_status_namedvalues = mib_builder.mibSymbols['PowerNet-MIB']['upsBasicOutputStatus'].syntax.getNamedValues()
@@ -163,9 +171,11 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 
 		output_voltage = self.snmpclient.get("PowerNet-MIB::upsAdvOutputVoltage.0").get_value()
 		_log.debug("Device %s output voltage is %dV", self.args.host, output_voltage)
+		yield nagiosplugin.Metric('output_voltage', output_voltage)
 
 		output_current = float(self.snmpclient.get("PowerNet-MIB::upsHighPrecOutputCurrent.0").get_value()) / 10.0
 		_log.debug("Device %s output current is %.1fA", self.args.host, output_current)
+		yield nagiosplugin.Metric('output_current', output_current)
 
 		output_load = self.snmpclient.get("PowerNet-MIB::upsAdvOutputLoad.0").get_value()
 		_log.debug("Device %s output load is %d%%", self.args.host, output_load)
@@ -173,9 +183,11 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 
 		output_frequency = self.snmpclient.get("PowerNet-MIB::upsAdvOutputFrequency.0").get_value()
 		_log.debug("Device %s output frequency is %dHz", self.args.host, output_frequency)
+		yield nagiosplugin.Metric('output_frequency', output_frequency)
 
 		output_efficiency = float(self.snmpclient.get("PowerNet-MIB::upsHighPrecOutputEfficiency.0").get_value()) / 10.0
 		_log.debug("Device %s output efficiency is %.1f%%", self.args.host, output_efficiency)
+		yield nagiosplugin.Metric('output_efficiency', output_efficiency)
 
 
 @nagiosplugin.guarded
@@ -224,6 +236,9 @@ def main():
 											warning='%i:%i' % (config_parser.getint(args.host, 'input_voltage_min_warn'), config_parser.getint(args.host, 'input_voltage_max_warn')),
 											critical='%i:%i' % (config_parser.getint(args.host, 'input_voltage_min_crit'), config_parser.getint(args.host, 'input_voltage_max_crit'))))
 
+	check.add(PerformanceContext('input_min_voltage'))
+	check.add(PerformanceContext('input_max_voltage'))
+
 	check.add(nagiosplugin.ScalarContext('input_frequency',
 											warning='%i:%i' % (config_parser.getint(args.host, 'input_frequency_min_warn'), config_parser.getint(args.host, 'input_frequency_max_warn')),
 											critical='%i:%i' % (config_parser.getint(args.host, 'input_frequency_min_crit'), config_parser.getint(args.host, 'input_frequency_max_crit'))))
@@ -265,14 +280,21 @@ def main():
 	]
 	check.add(ElementContext('output_status', ok_values=output_status_ok_values, warn_values=output_status_warn_values, crit_values=output_status_crit_values))
 
+	check.add(PerformanceContext('output_current'))
+	check.add(PerformanceContext('output_efficiency'))
+
 	# battery
 	check.add(nagiosplugin.ScalarContext('battery_capacity',
 											warning='%i:100' % (config_parser.getint(args.host, 'battery_capacity_min_warn')),
 											critical='%i:100' % (config_parser.getint(args.host, 'battery_capacity_min_crit'))))
 
+	check.add(PerformanceContext('battery_run_time_remaining'))
+
 	check.add(nagiosplugin.ScalarContext('battery_temperature',
 											warning='%i:%i' % (config_parser.getint(args.host, 'battery_temperature_min_warn'), config_parser.getint(args.host, 'battery_temperature_max_warn')),
 											critical='%i:%i' % (config_parser.getint(args.host, 'battery_temperature_min_crit'), config_parser.getint(args.host, 'battery_temperature_max_crit'))))
+
+	check.add(PerformanceContext('battery_voltage'))
 
 	check.add(nagiosplugin.ScalarContext('sysuptime', warning='@%i:%i' % (0, args.uptime)))
 
