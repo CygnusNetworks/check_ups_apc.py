@@ -18,6 +18,18 @@ MIB_PATH = os.path.realpath(os.path.dirname(ups_apc_snmp.__file__))
 
 _log = logging.getLogger('nagiosplugin')
 
+class UPSAPCSummary(nagiosplugin.Summary):
+	def ok(self, results):
+		summary = ''
+		summary += '%s - ' % (results['unit_type'].metric.value)
+		summary += 'BATTERY:(capacity %d%%, temperature %d C, runtime %d minutes) ' % (results['battery_capacity'].metric.value, results['battery_temperature'].metric.value, results['battery_run_time_remaining'].metric.value / 60.0)
+		summary += 'INPUT:(voltage %d V, frequency %d Hz) ' % (results['input_voltage'].metric.value, results['input_frequency'].metric.value)
+		summary += 'OUTPUT:(voltage %d V, frequency %d Hz, load %d%%) ' % (results['output_voltage'].metric.value, results['output_frequency'].metric.value, results['output_load'].metric.value)
+		summary += 'LAST EVENT:%s' % (results['input_fail_cause'].metric.value)
+		return summary
+
+	def problem(self, results):
+		return '{0} - {1}'.format(results.first_significant, self.ok(results))
 
 class PerformanceContext(nagiosplugin.Context):  # pylint: disable=too-few-public-methods
 	def __init__(self, name, fmt_metric='{name} is {valueunit}', result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
@@ -307,6 +319,8 @@ def main():
 	check.add(PerformanceContext('battery_voltage'))
 
 	check.add(nagiosplugin.ScalarContext('sysuptime', warning='@%i:%i' % (0, args.uptime)))
+
+	check.add(UPSAPCSummary())
 
 	check.main(args.verbose, timeout=args.timeout)
 
