@@ -123,6 +123,7 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		# device
 		unit_type = self.snmpclient.get("PowerNet-MIB::upsBasicIdentModel.0").get_value()
 		_log.debug("Device %s unit type is %s", self.args.host, unit_type)
+		yield nagiosplugin.Metric('unit_type', unit_type)
 
 		# battery
 		battery_capacity = self.snmpclient.get("PowerNet-MIB::upsAdvBatteryCapacity.0").get_value()
@@ -161,6 +162,12 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		input_frequency = self.snmpclient.get("PowerNet-MIB::upsAdvInputFrequency.0").get_value()
 		_log.debug("Device %s input frequency is %dHz", self.args.host, input_frequency)
 		yield nagiosplugin.Metric('input_frequency', input_frequency)
+
+		input_fail_cause_namedvalues = mib_builder.mibSymbols['PowerNet-MIB']['upsAdvInputLineFailCause'].syntax.getNamedValues()
+		input_fail_cause_value = self.snmpclient.get("PowerNet-MIB::upsAdvInputLineFailCause.0").get_value()
+		input_fail_cause = input_fail_cause_namedvalues.getName(input_fail_cause_value)
+		_log.debug("Device %s input last fail cause is %s", self.args.host, input_fail_cause)
+		yield nagiosplugin.Metric('input_fail_cause', input_fail_cause)
 
 		# output
 		output_status_namedvalues = mib_builder.mibSymbols['PowerNet-MIB']['upsBasicOutputStatus'].syntax.getNamedValues()
@@ -229,6 +236,7 @@ def main():
 
 	check = nagiosplugin.Check(UPSAPC(args))
 	check.add(SNMPContext('reachable'))
+	check.add(nagiosplugin.Context('unit_type'))
 	check.add(BoolContext('battery_replace_indicator', ok_text="Battery OK", crit_text="Battery needs replacement"))
 
 	# input
@@ -242,6 +250,8 @@ def main():
 	check.add(nagiosplugin.ScalarContext('input_frequency',
 											warning='%i:%i' % (config_parser.getint(args.host, 'input_frequency_min_warn'), config_parser.getint(args.host, 'input_frequency_max_warn')),
 											critical='%i:%i' % (config_parser.getint(args.host, 'input_frequency_min_crit'), config_parser.getint(args.host, 'input_frequency_max_crit'))))
+
+	check.add(nagiosplugin.Context('input_fail_cause'))
 
 	# output
 	check.add(nagiosplugin.ScalarContext('output_voltage',
