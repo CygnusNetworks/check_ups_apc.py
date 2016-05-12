@@ -18,6 +18,7 @@ MIB_PATH = os.path.realpath(os.path.dirname(ups_apc_snmp.__file__))
 
 _log = logging.getLogger('nagiosplugin')
 
+
 class UPSAPCSummary(nagiosplugin.Summary):
 	def ok(self, results):
 		summary = ''
@@ -30,6 +31,7 @@ class UPSAPCSummary(nagiosplugin.Summary):
 
 	def problem(self, results):
 		return '{0} - {1}'.format(results.first_significant, self.ok(results))
+
 
 class PerformanceContext(nagiosplugin.Context):  # pylint: disable=too-few-public-methods
 	def __init__(self, name, fmt_metric='{name} is {valueunit}', result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
