@@ -25,6 +25,7 @@ class UPSAPCSummary(nagiosplugin.Summary):
 		summary += 'BATTERY:(capacity %d%%, temperature %d C, runtime %d minutes) ' % (results['battery_capacity'].metric.value, results['battery_temperature'].metric.value, results['battery_run_time_remaining'].metric.value / 60.0)
 		summary += 'INPUT:(voltage %d V, frequency %d Hz) ' % (results['input_voltage'].metric.value, results['input_frequency'].metric.value)
 		summary += 'OUTPUT:(voltage %d V, frequency %d Hz, load %d%%) ' % (results['output_voltage'].metric.value, results['output_frequency'].metric.value, results['output_load'].metric.value)
+		summary += 'DIAGNOSTICS:(date: %s, result: %s) ' % (results['diagnostics_date'].metric.value, results['diagnostics_result'].metric.value)
 		summary += 'LAST EVENT:%s' % (results['input_fail_cause'].metric.value)
 		return summary
 
@@ -131,6 +132,14 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		unit_type = self.snmpclient.get("PowerNet-MIB::upsBasicIdentModel.0").get_value()
 		_log.debug("Device %s unit type is %s", self.args.host, unit_type)
 		yield nagiosplugin.Metric('unit_type', unit_type)
+
+		diagnostics_date = self.snmpclient.get("PowerNet-MIB::upsAdvTestLastDiagnosticsDate.0").get_value()
+		_log.debug("Device %s last diagnostics date was %s", self.args.host, diagnostics_date)
+		yield nagiosplugin.Metric('diagnostics_date', diagnostics_date)
+
+		diagnostics_result = self.snmpclient.get("PowerNet-MIB::upsAdvTestDiagnosticsResults.0").get_named_value()
+		_log.debug("Device %s last diagnostics result was %s", self.args.host, diagnostics_result)
+		yield nagiosplugin.Metric('diagnostics_result', diagnostics_result)
 
 		# battery
 		battery_capacity = self.snmpclient.get("PowerNet-MIB::upsAdvBatteryCapacity.0").get_value()
@@ -241,6 +250,8 @@ def main():
 	check.add(SNMPContext('reachable'))
 	check.add(nagiosplugin.Context('unit_type'))
 	check.add(BoolContext('battery_replace_indicator', ok_text="Battery OK", crit_text="Battery needs replacement"))
+	check.add(PerformanceContext('diagnostics_date'))
+	check.add(ElementContext('diagnostics_result', ok_values=['ok', 'testInProgress'], crit_values=['failed', 'invalidTest']))
 
 	# input
 	check.add(nagiosplugin.ScalarContext('input_voltage',
