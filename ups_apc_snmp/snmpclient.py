@@ -37,6 +37,8 @@ def load_mibs(*modules):
 				continue
 			raise
 
+def get_namedvalues(mibname, objectname):
+	return __mibBuilder.mibSymbols[mibname][objectname].syntax.getNamedValues()
 
 def snmp_auth_data(community, version=V2C, snmp_id=None):
 	if snmp_id is None:
@@ -300,6 +302,13 @@ class SnmpVarBinds(object):
 
 	def get_value(self, oid=None):
 		return self.get_by_dict(oid)
+
+	def get_named_value(self, oid=None):
+		name = nodename(self.get_dict().keys()[0]).split("::")
+		mibname = name[0]
+		objectname = name[1].split(".0")[0]
+		namedvalues = get_namedvalues(mibname, objectname)
+		return namedvalues.getName(self.get_by_dict(oid))
 
 	def get_varbinds(self):
 		return self.__varbinds
