@@ -9,7 +9,6 @@ import configparser
 import nagiosplugin
 import nagiosplugin.result
 import nagiosplugin.state
-import pysnmp.smi
 
 import ups_apc_snmp
 import ups_apc_snmp.snmpclient
@@ -107,12 +106,6 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		self.snmpclient = None
 
 	def probe(self):  # pylint: disable=too-many-locals
-		mib_builder = pysnmp.smi.builder.MibBuilder()
-		mib_sources = mib_builder.getMibSources() + (pysnmp.smi.builder.DirMibSource(MIB_PATH),)
-		mib_builder.setMibSources(*mib_sources)
-		mib_builder.loadModules("SNMPv2-MIB")
-		mib_builder.loadModules("PowerNet-MIB")
-
 		_log.debug("Probing APC UPS device %s through SNMP", self.args.host)
 		self.snmpclient = ups_apc_snmp.snmpclient.SnmpClient(self.args.host, ups_apc_snmp.snmpclient.snmp_auth_data_v2c(community=self.args.community), timeout=self.args.snmp_timeout, retries=self.args.retries)
 
@@ -177,16 +170,12 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		_log.debug("Device %s input frequency is %dHz", self.args.host, input_frequency)
 		yield nagiosplugin.Metric('input_frequency', input_frequency)
 
-		input_fail_cause_namedvalues = mib_builder.mibSymbols['PowerNet-MIB']['upsAdvInputLineFailCause'].syntax.getNamedValues()
-		input_fail_cause_value = self.snmpclient.get("PowerNet-MIB::upsAdvInputLineFailCause.0").get_value()
-		input_fail_cause = input_fail_cause_namedvalues.getName(input_fail_cause_value)
+		input_fail_cause = self.snmpclient.get("PowerNet-MIB::upsAdvInputLineFailCause.0").get_named_value()
 		_log.debug("Device %s input last fail cause is %s", self.args.host, input_fail_cause)
 		yield nagiosplugin.Metric('input_fail_cause', input_fail_cause)
 
 		# output
-		output_status_namedvalues = mib_builder.mibSymbols['PowerNet-MIB']['upsBasicOutputStatus'].syntax.getNamedValues()
-		output_status_value = self.snmpclient.get("PowerNet-MIB::upsBasicOutputStatus.0").get_value()
-		output_status = output_status_namedvalues.getName(output_status_value)
+		output_status = self.snmpclient.get("PowerNet-MIB::upsBasicOutputStatus.0").get_named_value()
 		_log.debug("Device %s output status is %s", self.args.host, output_status)
 		yield nagiosplugin.Metric('output_status', output_status)
 
