@@ -151,7 +151,7 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 			uio_temp1 = int(uio_temp1)
 			_log.debug("Device %s external temperature sensor 1 is at %dC", self.args.host, uio_temp1)
 			yield nagiosplugin.Metric('uio_temp1', uio_temp1)
-		except ValueError:
+		except:  # pylint: disable=W0702
 			pass
 
 		uio_temp2 = self.snmpclient.get("PowerNet-MIB::uioSensorStatusTemperatureDegC.1.2").get_value()
@@ -159,7 +159,7 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 			uio_temp2 = int(uio_temp2)
 			_log.debug("Device %s external temperature sensor 2 is at %dC", self.args.host, uio_temp2)
 			yield nagiosplugin.Metric('uio_temp2', uio_temp2)
-		except ValueError:
+		except:  # pylint: disable=W0702
 			pass
 
 		# battery
