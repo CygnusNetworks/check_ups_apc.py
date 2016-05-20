@@ -3,6 +3,7 @@
 $def[1] = '';
 $def[2] = '';
 $def[3] = '';
+$def[4] = '';
 
 for ($i=1; $i <= count($DS); $i++) {
   switch($NAME[$i]) {
@@ -12,7 +13,9 @@ for ($i=1; $i <= count($DS); $i++) {
     case 'output_frequency': $def[2] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
     case 'battery_voltage': $def[3] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
     case 'battery_capacity': $def[3] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
-    case 'battery_temperature': $def[3] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
+    case 'battery_temperature': $def[4] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
+    case 'uio_temp1': $def[4] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
+    case 'uio_temp2': $def[4] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
     default: break;
   }
 }
@@ -53,8 +56,21 @@ $def[3] .= rrd::gprint("battery_capacity", "AVERAGE", "Average %5.1lf %%");
 $def[3] .= rrd::gprint("battery_capacity", "MAX", "Max %5.1lf %%");
 $def[3] .= rrd::gprint("battery_capacity", "LAST", "Last %5.1lf %%\\n");
 
-$def[3] .= rrd::line1("battery_temperature", "#ff0000", "Battery Temperature");
-$def[3] .= rrd::gprint("battery_temperature", "AVERAGE", "Average %5.1lf °C");
-$def[3] .= rrd::gprint("battery_temperature", "MAX", "Max %5.1lf °C");
-$def[3] .= rrd::gprint("battery_temperature", "LAST", "Last %5.1lf °C\\n");
+$ds_name[4] = 'Temperature';
+$opt[4] = "--upper-limit 50 --lower-limit 0 --vertical-label \"C\"  --title $hostname";
+$def[4] .= rrd::line1("battery_temperature", "#ff0000", "Battery Temperature");
+$def[4] .= rrd::gprint("battery_temperature", "AVERAGE", "Average %5.1lf °C");
+$def[4] .= rrd::gprint("battery_temperature", "MAX", "Max %5.1lf °C");
+$def[4] .= rrd::gprint("battery_temperature", "LAST", "Last %5.1lf °C\\n");
+
+$def[4] .= rrd::line1("uio_temp1", "#00ff00", "External Sensor 1");
+$def[4] .= rrd::gprint("uio_temp1", "AVERAGE", "Average %5.1lf °C");
+$def[4] .= rrd::gprint("uio_temp1", "MAX", "Max %5.1lf °C");
+$def[4] .= rrd::gprint("uio_temp1", "LAST", "Last %5.1lf °C\\n");
+
+$def[4] .= rrd::line1("uio_temp2", "#0000ff", "External Sensor 2");
+$def[4] .= rrd::gprint("uio_temp2", "AVERAGE", "Average %5.1lf °C");
+$def[4] .= rrd::gprint("uio_temp2", "MAX", "Max %5.1lf °C");
+$def[4] .= rrd::gprint("uio_temp2", "LAST", "Last %5.1lf °C\\n");
+
 ?>
