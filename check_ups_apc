@@ -22,10 +22,10 @@ class UPSAPCSummary(nagiosplugin.Summary):
 	def ok(self, results):
 		summary = ''
 		summary += '%s - ' % (results['unit_type'].metric.value)
-		summary += 'BATTERY:(capacity %d%%, temperature %d C, runtime %d minutes) ' % (results['battery_capacity'].metric.value, results['battery_temperature'].metric.value, results['battery_run_time_remaining'].metric.value / 60.0)
+		summary += 'BATTERY:(%s, capacity %d%%, temperature %d C, runtime %d minutes) ' % (results['battery_status'].metric.value, results['battery_capacity'].metric.value, results['battery_temperature'].metric.value, results['battery_run_time_remaining'].metric.value / 60.0)
 		summary += 'INPUT:(voltage %d V, frequency %d Hz) ' % (results['input_voltage'].metric.value, results['input_frequency'].metric.value)
 		summary += 'OUTPUT:(voltage %d V, frequency %d Hz, load %d%%) ' % (results['output_voltage'].metric.value, results['output_frequency'].metric.value, results['output_load'].metric.value)
-		summary += 'DIAGNOSTICS:(date: %s, result: %s) ' % (results['diagnostics_date'].metric.value, results['diagnostics_result'].metric.value)
+		summary += 'DIAGNOSTICS:(date %s, result %s) ' % (results['diagnostics_date'].metric.value, results['diagnostics_result'].metric.value)
 		summary += 'LAST EVENT:%s' % (results['input_fail_cause'].metric.value)
 		return summary
 
@@ -142,6 +142,10 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		yield nagiosplugin.Metric('diagnostics_result', diagnostics_result)
 
 		# battery
+		battery_status = self.snmpclient.get("PowerNet-MIB::upsBasicBatteryStatus.0").get_named_value()
+		_log.debug("Device %s battery status is %s", self.args.host, battery_status)
+		yield nagiosplugin.Metric('battery_status', battery_status)
+
 		battery_capacity = float(self.snmpclient.get("PowerNet-MIB::upsHighPrecBatteryCapacity.0").get_value()) / 10.0
 		_log.debug("Device %s battery capacity is %.1f%%", self.args.host, battery_capacity)
 		yield nagiosplugin.Metric('battery_capacity', battery_capacity)
@@ -308,6 +312,8 @@ def main():
 	check.add(PerformanceContext('output_efficiency'))
 
 	# battery
+	check.add(ElementContext('battery_status', ok_values=['batteryNormal'], warn_values=['batteryLow'], crit_values=['batteryInFaultCondition']))
+
 	check.add(nagiosplugin.ScalarContext('battery_capacity',
 											warning='%i:100' % (config_parser.getint(args.host, 'battery_capacity_min_warn')),
 											critical='%i:100' % (config_parser.getint(args.host, 'battery_capacity_min_crit'))))
