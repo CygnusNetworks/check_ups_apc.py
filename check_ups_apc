@@ -26,6 +26,11 @@ class UPSAPCSummary(nagiosplugin.Summary):
 		summary += 'INPUT:(voltage %d V, frequency %d Hz) ' % (results['input_voltage'].metric.value, results['input_frequency'].metric.value)
 		summary += 'OUTPUT:(voltage %d V, frequency %d Hz, load %d%%) ' % (results['output_voltage'].metric.value, results['output_frequency'].metric.value, results['output_load'].metric.value)
 		summary += 'DIAGNOSTICS:(date %s, result %s) ' % (results['diagnostics_date'].metric.value, results['diagnostics_result'].metric.value)
+		if 'uio_temp1' in results and 'uio_temp2' in results:
+			summary += 'TEMP:(temp1 %d C, temp2 %d C) ' % (results['uio_temp1'].metric.value, results['uio_temp2'].metric.value)
+		elif 'uio_temp1' in results:
+			summary += 'TEMP:(temp1 %d) ' % results['uio_temp1'].metric.value
+
 		summary += 'LAST EVENT:%s' % (results['input_fail_cause'].metric.value)
 		return summary
 
@@ -140,6 +145,22 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		diagnostics_result = self.snmpclient.get("PowerNet-MIB::upsAdvTestDiagnosticsResults.0").get_named_value()
 		_log.debug("Device %s last diagnostics result was %s", self.args.host, diagnostics_result)
 		yield nagiosplugin.Metric('diagnostics_result', diagnostics_result)
+
+		uio_temp1 = self.snmpclient.get("PowerNet-MIB::uioSensorStatusTemperatureDegC.1.1").get_value()
+		try:
+			uio_temp1 = int(uio_temp1)
+			_log.debug("Device %s external temperature sensor 1 is at %dC", self.args.host, uio_temp1)
+			yield nagiosplugin.Metric('uio_temp1', uio_temp1)
+		except ValueError:
+			pass
+
+		uio_temp2 = self.snmpclient.get("PowerNet-MIB::uioSensorStatusTemperatureDegC.1.2").get_value()
+		try:
+			uio_temp2 = int(uio_temp2)
+			_log.debug("Device %s external temperature sensor 2 is at %dC", self.args.host, uio_temp2)
+			yield nagiosplugin.Metric('uio_temp2', uio_temp2)
+		except ValueError:
+			pass
 
 		# battery
 		battery_status = self.snmpclient.get("PowerNet-MIB::upsBasicBatteryStatus.0").get_named_value()
@@ -256,6 +277,8 @@ def main():
 	check.add(BoolContext('battery_replace_indicator', ok_text="Battery OK", crit_text="Battery needs replacement"))
 	check.add(PerformanceContext('diagnostics_date'))
 	check.add(ElementContext('diagnostics_result', ok_values=['ok', 'testInProgress'], crit_values=['failed', 'invalidTest']))
+	check.add(PerformanceContext('uio_temp1'))
+	check.add(PerformanceContext('uio_temp2'))
 
 	# input
 	check.add(nagiosplugin.ScalarContext('input_voltage',
