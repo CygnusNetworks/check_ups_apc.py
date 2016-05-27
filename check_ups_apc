@@ -26,9 +26,9 @@ class UPSAPCSummary(nagiosplugin.Summary):
 		summary += 'INPUT:(voltage %d V, frequency %d Hz) ' % (results['input_voltage'].metric.value, results['input_frequency'].metric.value)
 		summary += 'OUTPUT:(voltage %d V, frequency %d Hz, load %d%%) ' % (results['output_voltage'].metric.value, results['output_frequency'].metric.value, results['output_load'].metric.value)
 		summary += 'DIAGNOSTICS:(date %s, result %s) ' % (results['diagnostics_date'].metric.value, results['diagnostics_result'].metric.value)
-		if 'uio_temp1' in results and 'uio_temp2' in results:
+		if ('uio_temp1' in results and not results['uio_temp1'].metric.value == 'U') and ('uio_temp2' in results and not results['uio_temp2'].metric.value == 'U'):
 			summary += 'TEMP:(temp1 %d C, temp2 %d C) ' % (results['uio_temp1'].metric.value, results['uio_temp2'].metric.value)
-		elif 'uio_temp1' in results:
+		elif 'uio_temp1' in results and not results['uio_temp1'].metric.value == 'U':
 			summary += 'TEMP:(temp1 %d) ' % results['uio_temp1'].metric.value
 
 		summary += 'LAST EVENT:%s' % (results['input_fail_cause'].metric.value)
@@ -152,7 +152,7 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 			_log.debug("Device %s external temperature sensor 1 is at %dC", self.args.host, uio_temp1)
 			yield nagiosplugin.Metric('uio_temp1', uio_temp1)
 		except:  # pylint: disable=W0702
-			pass
+			yield nagiosplugin.Metric('uio_temp1', 'U')
 
 		uio_temp2 = self.snmpclient.get("PowerNet-MIB::uioSensorStatusTemperatureDegC.1.2").get_value()
 		try:
@@ -160,7 +160,7 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 			_log.debug("Device %s external temperature sensor 2 is at %dC", self.args.host, uio_temp2)
 			yield nagiosplugin.Metric('uio_temp2', uio_temp2)
 		except:  # pylint: disable=W0702
-			pass
+			yield nagiosplugin.Metric('uio_temp2', 'U')
 
 		# battery
 		battery_status = self.snmpclient.get("PowerNet-MIB::upsBasicBatteryStatus.0").get_named_value()
