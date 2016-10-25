@@ -1,4 +1,6 @@
 #!/usr/bin/make -f
 
+export PYBUILD_NAME=check_ups_apc.py
+
 %:
-	dh $@ --with python2
+	dh $@ --with python2 --buildsystem=pybuild

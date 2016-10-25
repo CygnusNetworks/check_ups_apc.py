@@ -2,7 +2,7 @@ Source: check-ups-apc.py
 Section: python
 Priority: optional
 Maintainer: Lukas Schauer <l.schauer@cygnusnetworks.de>
-Build-Depends: debhelper (>= 9), python-all, python-setuptools
+Build-Depends: debhelper (>= 9), dh-python, python-all, python-setuptools
 Standards-Version: 3.9.6
 X-Python-Version: >=2.7
 
