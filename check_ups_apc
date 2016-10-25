@@ -53,6 +53,36 @@ class PerformanceContext(nagiosplugin.Context):  # pylint: disable=too-few-publi
 		return self.result_cls(nagiosplugin.state.Ok, None, metric)
 
 
+class BatteryPackContext(nagiosplugin.Context):  # pylint: disable=too-few-public-methods
+	def __init__(self, name, fmt_metric=None, result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
+		super(BatteryPackContext, self).__init__(name, fmt_metric, result_cls)
+
+	def evaluate(self, metric, resource):
+		warnings = []
+		crits = []
+
+		for pack in list(metric.value):
+			if pack['cartridge_status'][0] == '1':
+				crits.append("Battery pack %d cartridge %d disconnected (Serial: %s)" % (pack['index'], pack['cartridge_index'], pack['serial']))
+			if pack['cartridge_status'][1] == '1':
+				warnings.append("Battery pack %d cartridge %d overvoltage (Serial: %s)" % (pack['index'], pack['cartridge_index'], pack['serial']))
+			if pack['cartridge_status'][2] == '1':
+				crits.append("Battery pack %d cartridge %d needs replacement (Serial: %s)" % (pack['index'], pack['cartridge_index'], pack['serial']))
+			if pack['cartridge_status'][3] == '1':
+				crits.append("Battery pack %d cartridge %d over-temperature (Serial: %s)" % (pack['index'], pack['cartridge_index'], pack['serial']))
+			if pack['cartridge_status'][4:].strip('0'):
+				warnings.append("Battery pack %d cartridge %d has issues (Serial: %s)" % (pack['index'], pack['cartridge_index'], pack['serial']))
+			if pack['cartridge_health'][0] == '0' and pack['cartridge_installdate'] != "01/01/2000":
+				warnings.append("Battery pack %d cartridge %d should be replaced (Serial: %s, Installed: %s, Replace: %s)" % (pack['index'], pack['cartridge_index'], pack['serial'], pack['cartridge_installdate'], pack['cartridge_replacedate']))
+
+		if crits:
+			return self.result_cls(nagiosplugin.state.Critical, ", ".join(crits + warnings), metric)
+		elif warnings:
+			return self.result_cls(nagiosplugin.state.Warning, ", ".join(warnings), metric)
+		else:
+			return self.result_cls(nagiosplugin.state.Ok, None, metric)
+
+
 class BoolContext(nagiosplugin.Context):  # pylint: disable=too-few-public-methods
 	def __init__(self, name, ok_text=None, crit_text=None, fmt_metric='{name} is {valueunit}', result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
 		self.ok_text = ok_text
@@ -190,6 +220,31 @@ class UPSAPC(nagiosplugin.Resource):  # pylint: disable=too-few-public-methods
 		battery_run_time_remaining = self.snmpclient.get("PowerNet-MIB::upsAdvBatteryRunTimeRemaining.0").get_value() / 100
 		_log.debug("Device %s battery run time remaining: %ds", self.args.host, battery_run_time_remaining)
 		yield nagiosplugin.Metric('battery_run_time_remaining', battery_run_time_remaining)
+
+		batterypacks = []
+		batterypacktable_varbinds = self.snmpclient.gettable("PowerNet-MIB::upsHighPrecBatteryPackTable")
+		batterypacktable = batterypacktable_varbinds.get_json_name()
+		batterypack_serial_prefix = 'PowerNet-MIB::upsHighPrecBatteryPackSerialNumber.'
+		batterypackids = list(x[len(batterypack_serial_prefix):] for x in batterypacktable.keys() if x.startswith(batterypack_serial_prefix))
+		for batterypackid in batterypackids:
+			batterypack = {}
+			batterypack['index'] = int(batterypacktable["PowerNet-MIB::upsHighPrecBatteryPackIndex.%s" % batterypackid])
+			batterypack['serial'] = batterypacktable["PowerNet-MIB::upsHighPrecBatteryPackSerialNumber.%s" % batterypackid].strip()
+
+			if batterypack['serial']:
+				batterypack['status'] = batterypacktable["PowerNet-MIB::upsHighPrecBatteryPackStatus.%s" % batterypackid]
+				batterypack['temperature'] = float(batterypacktable["PowerNet-MIB::upsHighPrecBatteryPackTemperature.%s" % batterypackid]) / 10.0
+
+				batterypack['cartridge_index'] = int(batterypacktable["PowerNet-MIB::upsHighPrecBatteryCartridgeIndex.%s" % batterypackid])
+				batterypack['cartridge_status'] = batterypacktable["PowerNet-MIB::upsHighPrecBatteryPackCartridgeStatus.%s" % batterypackid]
+				batterypack['cartridge_health'] = batterypacktable["PowerNet-MIB::upsHighPrecBatteryPackCartridgeHealth.%s" % batterypackid]
+				batterypack['cartridge_installdate'] = batterypacktable["PowerNet-MIB::upsHighPrecBatteryPackCartridgeInstallDate.%s" % batterypackid]
+				batterypack['cartridge_replacedate'] = batterypacktable["PowerNet-MIB::upsHighPrecBatteryPackCartridgeReplaceDate.%s" % batterypackid]
+
+				batterypacks.append(batterypack)
+				_log.debug("Battery pack: %r", batterypack)
+
+		yield nagiosplugin.Metric('battery_packs', batterypacks)
 
 		# input
 		input_voltage = float(self.snmpclient.get("PowerNet-MIB::upsHighPrecInputLineVoltage.0").get_value()) / 10.0
@@ -352,6 +407,8 @@ def main():
 											critical='%i:%i' % (config_parser.getint(args.host, 'battery_temperature_min_crit'), config_parser.getint(args.host, 'battery_temperature_max_crit'))))
 
 	check.add(PerformanceContext('battery_voltage'))
+
+	check.add(BatteryPackContext('battery_packs'))
 
 	check.add(nagiosplugin.ScalarContext('sysuptime', warning='@%i:%i' % (0, args.uptime)))
 
