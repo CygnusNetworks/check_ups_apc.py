@@ -19,7 +19,7 @@ _log = logging.getLogger('nagiosplugin')
 
 
 class UPSAPCSummary(nagiosplugin.Summary):
-	def ok(self, results):
+	def ok(self, results):  # pylint: disable=R0201
 		if 'error_status' in results['reachable'].metric.value:
 			summary = 'Device is not reachable through SNMP with error %s' % results['reachable'].metric.value['error_status']
 		else:
@@ -46,10 +46,10 @@ class PerformanceContext(nagiosplugin.Context):  # pylint: disable=too-few-publi
 	def __init__(self, name, fmt_metric='{name} is {valueunit}', result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
 		super(PerformanceContext, self).__init__(name, fmt_metric, result_cls)
 
-	def performance(self, metric, resource):
+	def performance(self, metric, resource):  # pylint: disable=W0613,R0201
 		return nagiosplugin.performance.Performance(metric.name, metric.value)
 
-	def evaluate(self, metric, resource):
+	def evaluate(self, metric, resource):  # pylint: disable=W0613
 		return self.result_cls(nagiosplugin.state.Ok, None, metric)
 
 
@@ -57,7 +57,7 @@ class BatteryPackContext(nagiosplugin.Context):  # pylint: disable=too-few-publi
 	def __init__(self, name, fmt_metric=None, result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
 		super(BatteryPackContext, self).__init__(name, fmt_metric, result_cls)
 
-	def evaluate(self, metric, resource):
+	def evaluate(self, metric, resource):  # pylint: disable=W0613
 		warnings = []
 		crits = []
 
@@ -89,7 +89,7 @@ class BoolContext(nagiosplugin.Context):  # pylint: disable=too-few-public-metho
 		self.crit_text = crit_text
 		super(BoolContext, self).__init__(name, fmt_metric, result_cls)
 
-	def evaluate(self, metric, resource):
+	def evaluate(self, metric, resource):  # pylint: disable=W0613
 		if metric.value:
 			return self.result_cls(nagiosplugin.state.Ok, self.ok_text, metric)
 		else:
@@ -102,7 +102,7 @@ class BoolContextWarning(BoolContext):  # pylint: disable=too-few-public-methods
 		self.warn_text = warn_text
 		super(BoolContextWarning, self).__init__(name, fmt_metric, result_cls)
 
-	def evaluate(self, metric, resource):
+	def evaluate(self, metric, resource):  # pylint: disable=W0613
 		if metric.value:
 			return self.result_cls(nagiosplugin.state.Ok, self.ok_text, metric)
 		else:
@@ -120,7 +120,7 @@ class ElementContext(nagiosplugin.Context):  # pylint: disable=too-few-public-me
 		self.crit_values = crit_values or []
 		super(ElementContext, self).__init__(name, fmt_metric, result_cls)
 
-	def evaluate(self, metric, resource):
+	def evaluate(self, metric, resource):  # pylint: disable=W0613
 		if metric.value in self.ok_values:
 			return self.result_cls(nagiosplugin.state.Ok, self.ok_text, metric)
 		elif metric.value in self.warn_values:
@@ -132,7 +132,7 @@ class ElementContext(nagiosplugin.Context):  # pylint: disable=too-few-public-me
 
 
 class SNMPContext(nagiosplugin.Context):  # pylint: disable=too-few-public-methods
-	def evaluate(self, metric, resource):
+	def evaluate(self, metric, resource):  # pylint: disable=W0613
 		if metric.value["status"]:
 			return self.result_cls(nagiosplugin.state.Ok, None, metric)
 		else:
