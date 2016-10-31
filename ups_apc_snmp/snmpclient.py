@@ -23,8 +23,15 @@ __mibViewController = view.MibViewController(__mibBuilder)
 
 def add_mib_path(path):
 	"""Add a directory to the MIB search path"""
-	if path not in __mibBuilder.getMibPath() and os.path.isdir(path):
-		__mibBuilder.setMibPath(*(__mibBuilder.getMibPath() + (path, )))  # pylint: disable=W0142
+	if not os.path.isdir(path):
+		return
+
+	for source in __mibBuilder.getMibSources():
+		if isinstance(source, builder.DirMibSource):
+			if source.fullPath() == path:
+				return
+
+	__mibBuilder.setMibSources(*(__mibBuilder.getMibSources() + (builder.DirMibSource(path), )))
 
 
 def load_mibs(*modules):
@@ -37,15 +44,17 @@ def load_mibs(*modules):
 				continue
 			raise
 
+
 def get_namedvalues(mibname, objectname):
 	return __mibBuilder.mibSymbols[mibname][objectname].syntax.getNamedValues()
+
 
 def snmp_auth_data(community, version=V2C, snmp_id=None):
 	if snmp_id is None:
 		sha_256 = hashlib.sha256()  # pylint: disable=E1101
-		sha_256.update(community)
-		sha_256.update(str(time.time() * 1000))
-		sha_256.update(str(random.random()))
+		sha_256.update(community.encode('ascii'))
+		sha_256.update(str(time.time() * 1000).encode('ascii'))
+		sha_256.update(str(random.random()).encode('ascii'))
 		snmp_id = sha_256.hexdigest()[:32]
 	return cmdgen.CommunityData(snmp_id, community, version)
 
@@ -86,7 +95,7 @@ def nodename(oid):
 	"""Translate dotted-decimal oid or oid tuple to symbolic name"""
 	if isinstance(oid, str):
 		oid = rfc1902.ObjectName(oid)
-	oid = __mibViewController.getNodeLocation(oid)
+	oid = __mibViewController.getNodeLocation(oid)  # pylint:disable=R0204
 	name = '::'.join(oid[:-1])
 	noid = '.'.join([str(x) for x in oid[-1]])
 	if noid:
@@ -111,7 +120,7 @@ def nodeid(oid):
 		except ValueError:
 			symbols = ids[0].split('::')
 			ids = tuple([int(x) for x in ids[1:]])
-			mibnode, = __mibBuilder.importSymbols(*symbols)  # pylint: disable=W0142
+			mibnode, = __mibBuilder.importSymbols(*symbols)
 			oid = mibnode.getName() + ids
 			return oid
 		else:
@@ -144,9 +153,16 @@ class SnmpClient(object):  # pylint: disable=R0902
 		self.retries = retries
 		self.error_indication = self.error_status = self.error_index = self.error_varbinds = None
 
-		(error_indication, error_status, error_index, varbinds) = cmdgen.CommandGenerator().getCmd(auth, cmdgen.UdpTransportTarget((self.host, self.port), timeout=timeout, retries=retries),
-																								nodeid('SNMPv2-MIB::sysName.0'),
-																								nodeid('SNMPv2-MIB::sysDescr.0'))
+		(error_indication, error_status, error_index, varbinds) = cmdgen.CommandGenerator().getCmd(
+			auth,
+			cmdgen.UdpTransportTarget(
+				(self.host, self.port),
+				timeout=timeout,
+				retries=retries
+			),
+			nodeid('SNMPv2-MIB::sysName.0'),
+			nodeid('SNMPv2-MIB::sysDescr.0')
+		)
 		if error_indication or error_status:
 			self.__set_error(error_indication, error_status, error_index, varbinds)
 		else:
@@ -170,7 +186,7 @@ class SnmpClient(object):  # pylint: disable=R0902
 		# print "oids is", oids
 		oids_trans = nodeids(oids)
 		# print "oids_trans are", oids_trans
-		(error_indication, error_status, error_index, varbinds) = cmdgen.CommandGenerator().getCmd(self.auth, cmdgen.UdpTransportTarget((self.host, self.port), timeout=self.timeout, retries=self.retries), *oids_trans)  # pylint: disable=W0142
+		(error_indication, error_status, error_index, varbinds) = cmdgen.CommandGenerator().getCmd(self.auth, cmdgen.UdpTransportTarget((self.host, self.port), timeout=self.timeout, retries=self.retries), *oids_trans)
 		if error_indication or error_status:
 			self.__set_error(error_indication, error_status, error_index, varbinds)
 			raise SnmpError("SNMP get command on %s of oid %r failed" % (self.host, oids), error_indication, error_status, error_index, varbinds)
@@ -180,7 +196,7 @@ class SnmpClient(object):  # pylint: disable=R0902
 		"""Get a complete subtable"""
 		assert self.alive is True
 		oids_trans = nodeids(oids)
-		(error_indication, error_status, error_index, varbinds) = cmdgen.CommandGenerator().bulkCmd(self.auth, cmdgen.UdpTransportTarget((self.host, self.port), timeout=self.timeout, retries=self.retries), 0, 25, *oids_trans)  # pylint: disable=W0142
+		(error_indication, error_status, error_index, varbinds) = cmdgen.CommandGenerator().bulkCmd(self.auth, cmdgen.UdpTransportTarget((self.host, self.port), timeout=self.timeout, retries=self.retries), 0, 25, *oids_trans)
 		if error_indication or error_status:
 			self.__set_error(error_indication, error_status, error_index, varbinds)
 			raise SnmpError("SNMP getnext on %s of oid %r failed" % (self.host, oids), error_indication, error_status, error_index, varbinds)
@@ -199,7 +215,7 @@ class SnmpClient(object):  # pylint: disable=R0902
 				if has_str:  # if oid is a tuple containing strings, assume translation using cmdgen.MibVariable.
 					# value must then be a Python type
 					assert isinstance(value, int) or isinstance(value, str) or isinstance(value, bool)
-					oidvalues_trans.append((cmdgen.MibVariable(*oid), value))  # pylint:disable=W0142
+					oidvalues_trans.append((cmdgen.MibVariable(*oid), value))
 				else:
 					# value must be a rfc1902/pyasn1 type
 					if not oid[-1] == 0:
@@ -212,7 +228,7 @@ class SnmpClient(object):  # pylint: disable=R0902
 				oidvalues_trans.append((nodeid(oid), value))
 
 		(error_indication, error_status, error_index, varbinds) = \
-			cmdgen.CommandGenerator().setCmd(self.auth, cmdgen.UdpTransportTarget((self.host, self.port), timeout=self.timeout, retries=self.retries), *oidvalues_trans)  # pylint: disable=W0612,W0142
+			cmdgen.CommandGenerator().setCmd(self.auth, cmdgen.UdpTransportTarget((self.host, self.port), timeout=self.timeout, retries=self.retries), *oidvalues_trans)  # pylint: disable=W0612
 		if error_indication or error_status:
 			self.__set_error(error_indication, error_status, error_index, varbinds)
 			raise SnmpError("SNMP set command on %s of oid values %r failed" % (self.host, oidvalues_trans), error_indication, error_status, error_index, varbinds)
@@ -279,12 +295,12 @@ class SnmpVarBinds(object):
 
 	def get_by_dict(self, oid):
 		self.dictify()
-		if oid is None and len(self.__varbinds_dict.keys()) == 1:
-			oid = self.__varbinds_dict.keys()[0]
+		if oid is None and len(list(self.__varbinds_dict.keys())) == 1:
+			oid = list(self.__varbinds_dict.keys())[0]
 		elif oid is None:
 			raise RuntimeError("Cannot query oid %r if multiple varBinds keys are present")
 		if isinstance(oid, str):
-			if self.__varbinds_dict.has_key(oid):
+			if oid in self.__varbinds_dict:
 				value = self.__varbinds_dict[oid]
 			else:
 				value = self.__varbinds_dict[rfc1902.ObjectName(nodeid(oid))]
@@ -304,7 +320,7 @@ class SnmpVarBinds(object):
 		return self.get_by_dict(oid)
 
 	def get_named_value(self, oid=None):
-		name = nodename(self.get_dict().keys()[0]).split("::")
+		name = nodename(list(self.get_dict().keys())[0]).split("::")
 		mibname = name[0]
 		objectname = name[1].split(".0")[0]
 		namedvalues = get_namedvalues(mibname, objectname)
@@ -319,11 +335,11 @@ class SnmpVarBinds(object):
 
 	def __get_json(self, keytype=str):
 		json = {}
-		for key, value in self.get_dict().items():
+		for key, value in list(self.get_dict().items()):
 			if isinstance(value, univ.OctetString):
 				value = str(value)
 			elif isinstance(value, univ.Integer):
-				value = int(value)
+				value = int(value)  # pylint:disable=R0204
 			elif isinstance(value, univ.ObjectIdentifier):
 				value = str(value)
 			else:
