@@ -23,18 +23,21 @@ class UPSAPCSummary(nagiosplugin.Summary):
 		if 'error_status' in results['reachable'].metric.value:
 			summary = 'Device is not reachable through SNMP with error %s' % results['reachable'].metric.value['error_status']
 		else:
-			summary = ''
-			summary += '%s - ' % (results['unit_type'].metric.value)
-			summary += 'BATTERY:(%s, capacity %d%%, temperature %d C, runtime %d minutes) ' % (results['battery_status'].metric.value, results['battery_capacity'].metric.value, results['battery_temperature'].metric.value, results['battery_run_time_remaining'].metric.value / 60.0)
-			summary += 'INPUT:(voltage %d V, frequency %d Hz) ' % (results['input_voltage'].metric.value, results['input_frequency'].metric.value)
-			summary += 'OUTPUT:(voltage %d V, frequency %d Hz, load %d%%) ' % (results['output_voltage'].metric.value, results['output_frequency'].metric.value, results['output_load'].metric.value)
-			summary += 'DIAGNOSTICS:(date %s, result %s) ' % (results['diagnostics_date'].metric.value, results['diagnostics_result'].metric.value)
-			if ('uio_temp1' in results and not results['uio_temp1'].metric.value == 'U') and ('uio_temp2' in results and not results['uio_temp2'].metric.value == 'U'):
-				summary += 'TEMP:(temp1 %d C, temp2 %d C) ' % (results['uio_temp1'].metric.value, results['uio_temp2'].metric.value)
-			elif 'uio_temp1' in results and not results['uio_temp1'].metric.value == 'U':
-				summary += 'TEMP:(temp1 %d) ' % results['uio_temp1'].metric.value
+			try:
+				summary = ''
+				summary += '%s - ' % (results['unit_type'].metric.value)
+				summary += 'BATTERY:(%s, capacity %d%%, temperature %d C, runtime %d minutes) ' % (results['battery_status'].metric.value, results['battery_capacity'].metric.value, results['battery_temperature'].metric.value, results['battery_run_time_remaining'].metric.value / 60.0)
+				summary += 'INPUT:(voltage %d V, frequency %d Hz) ' % (results['input_voltage'].metric.value, results['input_frequency'].metric.value)
+				summary += 'OUTPUT:(voltage %d V, frequency %d Hz, load %d%%) ' % (results['output_voltage'].metric.value, results['output_frequency'].metric.value, results['output_load'].metric.value)
+				summary += 'DIAGNOSTICS:(date %s, result %s) ' % (results['diagnostics_date'].metric.value, results['diagnostics_result'].metric.value)
+				if ('uio_temp1' in results and not results['uio_temp1'].metric.value == 'U') and ('uio_temp2' in results and not results['uio_temp2'].metric.value == 'U'):
+					summary += 'TEMP:(temp1 %d C, temp2 %d C) ' % (results['uio_temp1'].metric.value, results['uio_temp2'].metric.value)
+				elif 'uio_temp1' in results and not results['uio_temp1'].metric.value == 'U':
+					summary += 'TEMP:(temp1 %d) ' % results['uio_temp1'].metric.value
 
-			summary += 'LAST EVENT:%s' % (results['input_fail_cause'].metric.value)
+				summary += 'LAST EVENT:%s' % (results['input_fail_cause'].metric.value)
+			except KeyError as _:
+				summary = "No data available"
 
 		return summary
 
