@@ -4,7 +4,7 @@
 from setuptools import setup
 
 setup(name='check_ups_apc.py',
-	version='0.10',
+	version='0.12',
 	description='Nagios Check for APC USVs',
 	author='Lukas Schauer',
 	author_email='l.schauer@cygnusnetworks.de',
