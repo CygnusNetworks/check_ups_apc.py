@@ -1,3 +1,9 @@
+check-ups-apc.py (0.12+debian1) UNRELEASED; urgency=medium
+
+  * Change debian packaging to python3
+
+ -- Peter Adam <debian@cygnusnetworks.de>  Fri, 06 Sep 2019 11:40:06 +0200
+
 check-ups-apc.py (0.11+debian1) UNRELEASED; urgency=medium
 
   * Fix Battery check
