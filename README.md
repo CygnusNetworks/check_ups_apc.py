@@ -3,20 +3,20 @@
 This Nagios/Icinga Check provides the ability to query APC UPS devices (aka PowerNet) for current status.
 
 It will output voltages, frequencies, battery state and other values as performance data for tools like pnp4nagios.  
-Implementation is in Python. You will need Python libraries nagiosplugin and pysnmp as dependencies.
+Implementation is in Python. You will need Python libraries nagiosplugin and pysnmp as dependencies. You can use Python 2 or Python 3.
 
 You need to enable the SNMP Agent on your APC device and set a SNMP Read community.
 
 ### Installation (manual using pip) on your Nagios Host
 ```
 pip install -r requirements.txt
-python setup.py install
+python3 setup.py install
 ln -s /usr/bin/check_ups_apc /usr/lib/nagios/plugins/check_ups_apc
 ```
 
 ### Installation Debian package
 
-For Debian you can use the provided Debian package. Debian Jessie should be fine without any additional packages. For Debian Wheezy you will need python-configparser from Backports.
+For Debian you can use the provided Debian package. Debian 8 (Jessie) and higher should be fine without any additional packages. 
 
 ### Usage example
 
