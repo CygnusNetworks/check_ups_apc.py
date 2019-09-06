@@ -11,4 +11,5 @@ setup(name='check_ups_apc.py',
 	license='Apache 2.0',
 	packages=['ups_apc_snmp'],
 	scripts=['check_ups_apc'],
+	zip_safe=False,
 	install_requires=['configparser', 'nagiosplugin', 'pysnmp'])
