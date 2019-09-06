@@ -9,14 +9,15 @@ You need to enable the SNMP Agent on your APC device and set a SNMP Read communi
 
 ### Installation (manual using pip) on your Nagios Host
 ```
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 python3 setup.py install
 ln -s /usr/bin/check_ups_apc /usr/lib/nagios/plugins/check_ups_apc
 ```
 
 ### Installation Debian package
 
-For Debian you can use the provided Debian package. Debian 8 (Jessie) and higher should be fine without any additional packages. 
+For Debian you can use the provided Debian package. Debian 8 (Jessie) and higher should be fine without any additional packages. For building the Debian package use:
+
 
 ### Usage example
 
