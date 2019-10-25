@@ -97,9 +97,9 @@ $def[5] .= rrd::gprint("output_load", "MAX", "Max %5.1lf %%");
 $def[5] .= rrd::gprint("output_load", "LAST", "Last %5.1lf %%\\n");
 
 $ds_name[6] = 'Run Time Remaining';
-$opt[6] = "--upper-limit 50 --lower-limit 0 --vertical-label \"min\"  --title $hostname";
+$opt[6] = "--upper-limit 50 --lower-limit 0 --vertical-label \"sec\"  --title $hostname";
 $def[6] .= rrd::line1("battery_run_time_remaining", "#21db2a", "Battery Run Time Remaining");
-$def[6] .= rrd::gprint("battery_run_time_remaining", "AVERAGE", "Average %5.1lf min");
-$def[6] .= rrd::gprint("battery_run_time_remaining", "MAX", "Max %5.1lf min");
-$def[6] .= rrd::gprint("battery_run_time_remaining", "LAST", "Last %5.1lf min\\n");
+$def[6] .= rrd::gprint("battery_run_time_remaining", "AVERAGE", "Average %5.1lf sec");
+$def[6] .= rrd::gprint("battery_run_time_remaining", "MAX", "Max %5.1lf sec");
+$def[6] .= rrd::gprint("battery_run_time_remaining", "LAST", "Last %5.1lf sec\\n");
 ?>
