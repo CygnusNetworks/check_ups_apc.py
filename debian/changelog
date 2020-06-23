@@ -1,3 +1,10 @@
+check-ups-apc.py (0.12+debian3) UNRELEASED; urgency=medium
+
+  * Fix runtime remaining unit
+  * Fix warning result status line
+
+ -- Peter Adam <debian@cygnusnetworks.de>  Tue, 23 Jun 2020 09:44:11 +0200
+
 check-ups-apc.py (0.12+debian2) UNRELEASED; urgency=medium
 
   * Add output load and battery runtime remaining to RRD graphs
