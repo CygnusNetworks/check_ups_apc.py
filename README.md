@@ -27,7 +27,7 @@ Nagios Plugin called manually:
 ./check_ups_apc -H 10.0.0.1 -C public
 ```
 
-See `check_ups_apc -h` for additional command line arguments. Use -vvv to get Debug Output including additional system information.
+See `check_ups_apc -h` for additional command line arguments. Use -vvv to get Debug Output including additional system information. Use -b to ignore battery replacement warnings.
 
 ### Using a config file
 

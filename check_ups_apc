@@ -57,8 +57,9 @@ class PerformanceContext(nagiosplugin.Context):  # pylint: disable=too-few-publi
 
 
 class BatteryPackContext(nagiosplugin.Context):  # pylint: disable=too-few-public-methods
-	def __init__(self, name, fmt_metric=None, result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
+	def __init__(self, name, battery_ignore_replacement, fmt_metric=None, result_cls=nagiosplugin.result.Result):  # pylint: disable=too-many-arguments
 		super(BatteryPackContext, self).__init__(name, fmt_metric, result_cls)
+		self.battery_ignore_replacement = battery_ignore_replacement
 
 	def evaluate(self, metric, resource):  # pylint: disable=W0613
 		warnings = []
@@ -69,13 +70,13 @@ class BatteryPackContext(nagiosplugin.Context):  # pylint: disable=too-few-publi
 				crits.append("Battery pack %d cartridge %d disconnected (Serial: %s)" % (pack['index'], pack['cartridge_index'], pack['serial']))
 			if pack['cartridge_status'][1] == '1':
 				warnings.append("Battery pack %d cartridge %d overvoltage (Serial: %s)" % (pack['index'], pack['cartridge_index'], pack['serial']))
-			if pack['cartridge_status'][2] == '1':
+			if pack['cartridge_status'][2] == '1' and self.battery_ignore_replacement is False:
 				crits.append("Battery pack %d cartridge %d needs replacement (Serial: %s)" % (pack['index'], pack['cartridge_index'], pack['serial']))
 			if pack['cartridge_status'][3] == '1':
 				crits.append("Battery pack %d cartridge %d over-temperature (Serial: %s)" % (pack['index'], pack['cartridge_index'], pack['serial']))
 			if pack['cartridge_status'][4:].strip('0'):
 				warnings.append("Battery pack %d cartridge %d has issues (Serial: %s)" % (pack['index'], pack['cartridge_index'], pack['serial']))
-			if pack['cartridge_health'][0] == '0' and pack['cartridge_installdate'] != "01/01/2000":
+			if pack['cartridge_health'][0] == '0' and pack['cartridge_installdate'] != "01/01/2000" and self.battery_ignore_replacement is False:
 				warnings.append("Battery pack %d cartridge %d should be replaced (Serial: %s, Installed: %s, Replace: %s)" % (pack['index'], pack['cartridge_index'], pack['serial'], pack['cartridge_installdate'], pack['cartridge_replacedate']))
 
 		if crits:
@@ -307,6 +308,7 @@ def main():
 	argp.add_argument('-s', '--snmp-timeout', help='SNMP timeout', dest='snmp_timeout', type=int, default=2)
 	argp.add_argument('-r', '--retries', help='SNMP retries', type=int, default=3)
 	argp.add_argument('-u', '--uptime', help='Uptime limit in minutes to create warning', type=int, default=120)
+	argp.add_argument('-b', '--battery-ignore-replacement', help='Ignore battery replacement warnings', action='store_true')
 	args = argp.parse_args()
 
 	device_defaults = dict(
@@ -411,7 +413,7 @@ def main():
 
 	check.add(PerformanceContext('battery_voltage'))
 
-	check.add(BatteryPackContext('battery_packs'))
+	check.add(BatteryPackContext('battery_packs', args.battery_ignore_replacement))
 
 	check.add(nagiosplugin.ScalarContext('sysuptime', warning='@%i:%i' % (0, args.uptime)))
 
