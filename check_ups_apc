@@ -81,7 +81,7 @@ class BatteryPackContext(nagiosplugin.Context):  # pylint: disable=too-few-publi
 		if crits:
 			return self.result_cls(nagiosplugin.state.Critical, ", ".join(crits + warnings), metric)
 		elif warnings:
-			return self.result_cls(nagiosplugin.state.Warning, ", ".join(warnings), metric)
+			return self.result_cls(nagiosplugin.state.Warn, ", ".join(warnings), metric)
 		else:
 			return self.result_cls(nagiosplugin.state.Ok, None, metric)
 

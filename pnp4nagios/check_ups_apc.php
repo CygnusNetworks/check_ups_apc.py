@@ -4,6 +4,8 @@ $def[1] = '';
 $def[2] = '';
 $def[3] = '';
 $def[4] = '';
+$def[5] = '';
+$def[6] = '';
 
 $sensors = array('uio_temp1' => false, 'uio_temp2' => false);
 
@@ -16,6 +18,8 @@ for ($i=1; $i <= count($DS); $i++) {
 		case 'battery_voltage': $def[3] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
 		case 'battery_capacity': $def[3] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
 		case 'battery_temperature': $def[4] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
+		case 'output_load': $def[5] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
+		case 'battery_run_time_remaining': $def[6] .= rrd::def($NAME[$i], $RRDFILE[1], $DS[$i]); break;
 		case 'uio_temp1':
 		case 'uio_temp2':
 			if($this->DS[$i-1]['ACT'] != 'U') {
@@ -84,4 +88,18 @@ if($sensors['uio_temp2']) {
 	$def[4] .= rrd::gprint("uio_temp2", "LAST", "Last %5.1lf °C\\n");
 }
 
+$ds_name[5] = 'Load';
+$opt[5] = "--upper-limit 100 --lower-limit 0 --vertical-label \"%\"  --title $hostname";
+$def[5] .= rrd::gradient("output_load", "FFAD00", "FF1D00");
+$def[5] .= rrd::line1("output_load", "#FF0000", "Output Load");
+$def[5] .= rrd::gprint("output_load", "AVERAGE", "Average %5.1lf %%");
+$def[5] .= rrd::gprint("output_load", "MAX", "Max %5.1lf %%");
+$def[5] .= rrd::gprint("output_load", "LAST", "Last %5.1lf %%\\n");
+
+$ds_name[6] = 'Run Time Remaining';
+$opt[6] = "--upper-limit 50 --lower-limit 0 --vertical-label \"sec\"  --title $hostname";
+$def[6] .= rrd::line1("battery_run_time_remaining", "#21db2a", "Battery Run Time Remaining");
+$def[6] .= rrd::gprint("battery_run_time_remaining", "AVERAGE", "Average %5.1lf sec");
+$def[6] .= rrd::gprint("battery_run_time_remaining", "MAX", "Max %5.1lf sec");
+$def[6] .= rrd::gprint("battery_run_time_remaining", "LAST", "Last %5.1lf sec\\n");
 ?>
