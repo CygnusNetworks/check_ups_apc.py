@@ -1,7 +1,7 @@
 Source: check-ups-apc.py
 Section: python
 Priority: optional
-Maintainer: Lukas Schauer <l.schauer@cygnusnetworks.de>
+Maintainer: Lukas Schauer <debian@cygnusnetworks.de>
 Build-Depends: debhelper (>= 9), dh-python, python3-all, python3-setuptools
 Standards-Version: 3.9.6
 X-Python-Version: >=2.7

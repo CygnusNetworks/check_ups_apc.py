@@ -1,3 +1,9 @@
+check-ups-apc.py (0.13+debian1) UNRELEASED; urgency=low
+
+  * Add option to ignore battery replacement warning
+
+ -- Dr. Torge Szczepanek <debian@cygnusnetworks.de>  Fri, 26 Jun 2020 12:52:37 +0200
+
 check-ups-apc.py (0.12+debian3) UNRELEASED; urgency=medium
 
   * Fix runtime remaining unit
