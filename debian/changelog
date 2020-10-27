@@ -1,3 +1,9 @@
+check-ups-apc.py (0.14+debian1) UNRELEASED; urgency=low
+
+  * Change script to entry_point
+
+ -- Dr. Torge Szczepanek <debian@cygnusnetworks.de>  Tue, 27 Oct 2020 12:38:30 +0100
+
 check-ups-apc.py (0.13+debian1) UNRELEASED; urgency=low
 
   * Add option to ignore battery replacement warning
