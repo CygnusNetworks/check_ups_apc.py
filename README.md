@@ -1,3 +1,6 @@
+> [\!WARNING]
+> **This project is archived and no longer maintained.** It is no longer in use within our team. No further development, bug fixes, or support will be provided. Feel free to fork if you need to continue development.
+
 ## APC UPS Nagios Check
 
 This Nagios/Icinga Check provides the ability to query APC UPS devices (aka PowerNet) for current status.
